@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	go led.New(machine.LED).Exec(led.RuleRapid)
+	go led.New(machine.LED).Blink(.5, .5)
 
 	var (
 		uart = machine.Serial
