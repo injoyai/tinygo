@@ -18,6 +18,10 @@
    * 按下`FlyMcu`的`开始编程`按钮,等待烧录完成
    * 修改跳线位置,并按下复位键
 
+### 测试环境
+   * tinygo版本`v0.27.0`,[`点击下载`](`https://github.com/tinygo-org/tinygo/releases/download/v0.27.0/tinygo0.27.0.windows-amd64.zip`)
+   * golang版本`v1.20`,[`点击下载`](`https://studygolang.com/dl/golang/go1.20.windows-amd64.zip`)
+
 ### 常见问题
 
 1. error: failed to flash C:\Users\USER\AppData\Local\Temp\tinygo716933404\main.hex: exec: "openocd": executable file not found in %PATH%
