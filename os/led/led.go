@@ -14,19 +14,21 @@ import (
 func New(pin machine.Pin) *LED {
 	pin.Configure(machine.PinConfig{Mode: machine.PinOutput})
 	return &LED{
-		Pin: pin,
-		ch:  make(chan Rule, 1),
+		Pin:   pin,
+		ch:    make(chan Blink, 1),
+		timer: time.NewTimer(0),
 	}
 }
 
 type LED struct {
 	machine.Pin                    //引脚
-	ch          chan Rule          //中途插入规则
+	ch          chan Blink         //中途插入规则
 	cancel      context.CancelFunc //上下文
+	timer       *time.Timer
 }
 
 // Insert 插入闪烁规则
-func (this *LED) Insert(r Rule) {
+func (this *LED) Insert(r Blink) {
 	select {
 	case this.ch <- r:
 	default:
@@ -35,25 +37,38 @@ func (this *LED) Insert(r Rule) {
 
 // Rapid 急促闪烁一次
 func (this *LED) Rapid() {
-	this.Insert(RuleRapid)
+	this.Insert(BlinkRapid)
 }
 
-// Blink 闪烁,背景led效果
-func (this *LED) Blink(low, high float32) {
-	this.Background(Rule{
-		time.Millisecond * time.Duration(low*1000),
-		time.Millisecond * time.Duration(high*1000),
-	})
-}
-
+// Stop 停止背景led效果
 func (this *LED) Stop() {
 	if this.cancel != nil {
 		this.cancel()
 	}
 }
 
+// GoBlink 闪烁,背景led效果
+func (this *LED) GoBlink(low, high float32) *LED {
+	go this.Blink(low, high)
+	return this
+}
+
+// Blink 闪烁,背景led效果
+func (this *LED) Blink(low, high float32) {
+	this.Background(Blink{
+		time.Millisecond * time.Duration(low*1000),
+		time.Millisecond * time.Duration(high*1000),
+	})
+}
+
+// GoBackground 背景led效果
+func (this *LED) GoBackground(r Blink) *LED {
+	go this.Background(r)
+	return this
+}
+
 // Background 背景led效果
-func (this *LED) Background(r Rule) {
+func (this *LED) Background(r Blink) {
 	this.Stop()
 	var ctx context.Context
 	ctx, this.cancel = context.WithCancel(context.Background())
@@ -62,7 +77,7 @@ func (this *LED) Background(r Rule) {
 		return
 	}
 	if len(r) == 0 {
-		r = Rule{time.Second}
+		r = Blink{time.Second}
 	}
 	for {
 		select {
@@ -80,15 +95,16 @@ func (this *LED) Background(r Rule) {
 }
 
 // exec 执行led规则,半途插入效果,会立即执行,并丢弃正在执行的效果
-func (this *LED) exec(ctx context.Context, r Rule) {
+func (this *LED) exec(ctx context.Context, r Blink) {
 	for i := range r {
+		this.timer.Reset(r[i])
 		select {
 		case <-ctx.Done():
 			return
 		case insert := <-this.ch:
 			this.exec(ctx, insert)
 			return
-		case <-time.After(r[i]):
+		case <-this.timer.C:
 			if i%2 == 0 {
 				this.Pin.High()
 			} else {
@@ -98,28 +114,44 @@ func (this *LED) exec(ctx context.Context, r Rule) {
 	}
 }
 
-// Rule 闪烁规则,效果
-type Rule []time.Duration
+// Blink 闪烁规则,效果
+type Blink []time.Duration
 
 var (
-	// RuleDefault 默认闪烁规则
-	RuleDefault = Rule{
+	// BlinkDefault 默认闪烁规则
+	BlinkDefault = Blink{
+		time.Millisecond * 500,
+		time.Millisecond * 500,
+	}
+
+	// BlinkRunning 运行中闪烁规则
+	BlinkRunning = Blink{
 		time.Millisecond * 1500,
 		time.Millisecond * 500,
 	}
 
-	// RuleRapid 急促闪烁
-	RuleRapid = Rule{
+	// BlinkRapid 急促闪烁
+	BlinkRapid = Blink{
 		time.Millisecond * 200,
 		time.Millisecond * 200,
+	}
+
+	// BlinkFast 快速闪烁3次
+	BlinkFast = Blink{
+		time.Millisecond * 100,
+		time.Millisecond * 100,
+		time.Millisecond * 100,
+		time.Millisecond * 100,
+		time.Millisecond * 100,
+		time.Millisecond * 100,
 	}
 )
 
 // NewRule 新建闪烁规则,1表示1秒
-func NewRule(f ...float32) Rule {
-	r := Rule{}
-	for _, v := range f {
-		r = append(r, time.Millisecond*time.Duration(v*1000))
+func NewRule(f ...float32) Blink {
+	r := make(Blink, len(f))
+	for i := range f {
+		r[i] = time.Millisecond * time.Duration(f[i]*1000)
 	}
 	return r
 }

@@ -2,7 +2,7 @@ package easy
 
 import (
 	"errors"
-	"github.com/injoyai/conv"
+	"github.com/injoyai/tinygo/conv"
 	"io"
 )
 
