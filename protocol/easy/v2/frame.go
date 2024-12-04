@@ -62,26 +62,18 @@ func ReadFrom(r io.Reader) (*Request, error) {
 			return nil, err
 		}
 		s := *(*string)(unsafe.Pointer(&bs))
-		ls := strings.Split(s, Spilt)
+		ls := strings.SplitN(s, Spilt, 3)
 		if len(ls) < 2 {
 			continue
 		}
-		switch ls[0] {
-		case GET:
-			return &Request{
-				Type: ls[0],
-				Key:  ls[1],
-			}, nil
-		case SET:
-			if len(ls) < 3 {
-				continue
-			}
-			return &Request{
-				Type:  ls[0],
-				Key:   ls[1],
-				Value: ls[2],
-			}, nil
+		req := &Request{
+			Type: ls[0],
+			Key:  ls[1],
 		}
+		if len(ls) >= 3 {
+			req.Value = ls[2]
+		}
+		return req, nil
 	}
 }
 
@@ -104,6 +96,9 @@ func readFrom(r io.Reader) ([]byte, error) {
 					return nil, err
 				}
 				if b[0] == '\n' {
+					if buf[len(buf)-1] == '\r' {
+						return buf[:len(buf)-1], nil
+					}
 					return buf, nil
 				}
 				buf = append(buf, b[0])

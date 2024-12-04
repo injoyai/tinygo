@@ -23,15 +23,16 @@ func (this *Serial) SetConfig(config Config) error {
 
 // Read 实现io.Reader接口
 func (this *Serial) Read(p []byte) (n int, err error) {
-	if this.UART.Buffered() == 0 {
+	for this.UART.Buffered() == 0 {
+		//等待时间参考 `examples/uart/uart.go`
 		<-time.After(time.Millisecond * 10)
 	}
 	return this.UART.Read(p)
 }
 
-//func (this *Serial) Close() error {
-//	return nil
-//}
+func (this *Serial) Close() error {
+	return nil
+}
 
 type Parity = machine.UARTParity
 
