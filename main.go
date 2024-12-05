@@ -9,6 +9,7 @@ import (
 	"github.com/injoyai/tinygo/oss/led"
 	"github.com/injoyai/tinygo/oss/serial"
 	"github.com/injoyai/tinygo/protocol/easy"
+	"github.com/injoyai/tinygo/times"
 	"machine"
 	"runtime"
 	"time"
@@ -42,6 +43,7 @@ func init() {
 	Server.RegisterGet("version", func() any { return runtime.Version() }) //tinygo版本
 	Server.RegisterGet("root", func() any { return runtime.GOROOT() })
 	Server.RegisterGet("go_num", func() any { return runtime.NumGoroutine() })
+	Server.RegisterGet("time", func() any { return times.Now().Format(time.DateTime) })
 	Server.RegisterGet("4g_imei", func() any {
 		imei, err := AT.ReadIMEI()
 		if err != nil {
