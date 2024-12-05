@@ -1,7 +1,7 @@
 package logs
 
 import (
-	"time"
+	"github.com/injoyai/tinygo/times"
 	"unsafe"
 )
 
@@ -21,6 +21,6 @@ func (this FormatFunc) Formatter(l *Log, bs []byte) []byte {
 }
 
 func timeFormatter(l *Log, bs []byte) []byte {
-	s := time.Now().Format("15:04:05") + " [" + l.Tag + "] " + string(bs)
+	s := times.Now().Format("15:04:05") + " [" + l.Tag + "] " + string(bs)
 	return *(*[]byte)(unsafe.Pointer(&s))
 }
