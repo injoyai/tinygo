@@ -8,7 +8,7 @@ import (
 	"github.com/injoyai/tinygo/oss/flash"
 	"github.com/injoyai/tinygo/oss/led"
 	"github.com/injoyai/tinygo/oss/serial"
-	"github.com/injoyai/tinygo/protocol/easy/v2"
+	"github.com/injoyai/tinygo/protocol/easy"
 	"machine"
 	"runtime"
 	"time"
