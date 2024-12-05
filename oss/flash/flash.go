@@ -16,7 +16,7 @@ import (
 const BufferSize uint32 = 256
 
 const (
-	PicoStart uint32 = 0x00000000
+	PicoStart uint32 = 0x10180000 // 0x10000000
 )
 
 func New(start, size uint32) *Flash {
@@ -52,11 +52,11 @@ func (this *Flash) Read(buf []byte) (n int, err error) {
 
 func (this *Flash) Write(buf []byte) (int, error) {
 	var slice *[BufferSize]byte
-	for i := uint32(0); i < this.Size; i++ {
+	bufMax := uint32(len(buf)) / BufferSize
+
+	for i := uint32(0); i < this.Size && i <= bufMax; i++ {
 		slice = (*[BufferSize]byte)(unsafe.Pointer(uintptr(this.Start + i*BufferSize)))
-		for x := range buf[i*BufferSize:] {
-			slice[x] = buf[i*BufferSize+uint32(x)]
-		}
+		copy(slice[:], buf[i*BufferSize:])
 	}
 	return len(buf), nil
 }

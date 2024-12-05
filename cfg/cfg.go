@@ -65,7 +65,6 @@ func (this *Cfg) Save() error {
 	if this.r == nil {
 		return errors.New("无效IO")
 	}
-	logs.Debug("Write", string(this.Bytes()))
 	_, err := this.r.Write(this.Bytes())
 	return err
 }
